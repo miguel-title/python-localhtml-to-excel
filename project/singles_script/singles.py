@@ -13,9 +13,11 @@ from selenium.webdriver.common.keys import Keys
 
 
 from selenium.webdriver.chrome.options import Options
+import glob
 
 import time
 import random
+
 
 #Import the os in order to get the current directory
 import os
@@ -25,9 +27,6 @@ class SinglesApp():
     def __init__(self, name=""):
         #self.name: str = name
         self.driver = self.make_driver()
-
-        #Set the Constant
-        self.BaseUrl = "https://www.cnbc.com/quotes/"
         
         self.inputpath = ''
         self.outputpath = ''
@@ -73,7 +72,7 @@ class SinglesApp():
         time.sleep(sleeptime)
 
     def getInputHtmlsPath(self):
-        lstSymbols = []
+        lstFiles = []
 
         import configparser
 
@@ -83,26 +82,18 @@ class SinglesApp():
         self.inputpath = parser.get('global', 'input')
         self.outputpath = parser.get('global',  'output')
 
-        import openpyxl
+        for (root, dirs, file) in os.walk(self.inputpath):
+            for f in file:
+                if '.html' in f:
+                    lstFiles.append(os.path.abspath(os.path.join(root, f)))
 
-        # Define variable to load the wookbook
-        wookbook = openpyxl.load_workbook(self.inputpath)
-
-        # Define variable to read the active sheet:
-        worksheet = wookbook.active
-        
-        for i in range(0, worksheet.max_row):
-            for col in worksheet.iter_cols(1, worksheet.max_column):
-                lstSymbols.append(col[i].value)
-                break
-
-        return lstSymbols
+        return lstFiles
 
     def processing(self):
         lstInputPaths = self.getInputHtmlsPath()
 
         result = []
-        header_data = ['TICKER', 'EPS (TTM)', 'P/E (TTM)', 'FWD P/E (NTM)', 'EBITDA (MRQ)', 'ROE (MRQ)', 'REVENUE (MRQ)', 'GROSS MARGIN (MRQ)', 'NET MARGIN (MRQ)', 'DEBT TO EQUITY (MRQ)']
+        header_data = ['Debut Date', 'Peak Date', 'Peak Pos', 'Wks at Peak', 'Weeks Charted', 'Chart Title', 'Artist', 'A-Side', 'B-Side', 'Label & Number']
 
         result.append(header_data)
         isfirst = True
@@ -111,40 +102,46 @@ class SinglesApp():
             if isfirst == True:
                 isfirst = False
                 continue
+
+            if '\\admin.html' in path or '\\record_research.html' in path or '__MACOSX' in path:
+                continue
+
             #print(index)
             index += 1
-            print(symbol)
-            url = self.BaseUrl + symbol + "?qsearchterm="
-            print(url)
 
             driver = self.driver
             try:
-                driver.get(url)
+                driver.get(path)
             except Exception as e:
-                print('symbol {} error'.format(symbol))
+                print("driver error:{}".format(e))
                 continue
-
+            print("-------------------------------------------------------")
+            print(path)
+            rows = []
             try:
-                eps = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[1]/span[2]"))).get_attribute('textContent')
-                pe = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[2]/span[2]"))).get_attribute('textContent')
-                fwd = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[3]/span[2]"))).get_attribute('textContent')
-                ebitda = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[4]/span[2]"))).get_attribute('textContent')
-                roe = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[5]/span[2]"))).get_attribute('textContent')
-                revenue = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[6]/span[2]"))).get_attribute('textContent')
-                grossmargin = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[7]/span[2]"))).get_attribute('textContent')
-                netmargin = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[8]/span[2]"))).get_attribute('textContent')
-                debttoequity = WebDriverWait(driver,20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='MainContentContainer']/div/div[2]/div[1]/div[5]/div[2]/section/div[3]/ul/li[9]/span[2]"))).get_attribute('textContent')
-
+                rows = driver.find_elements_by_xpath("//*[@id='search_results']/table/tbody/tr")
+            except Exception as e:
+                print("getting rows error:{}".format(e))
+            
+            isrowfirst = True
+            for row in rows:
+                if isrowfirst == True:
+                    isrowfirst = False
+                    continue
+                debutdate = row.find_element_by_xpath("./td[2]").text
+                peakdate = row.find_element_by_xpath("./td[3]").text
+                peakpos = row.find_element_by_xpath("./td[4]").text
+                wks = row.find_element_by_xpath("./td[5]").text
+                weeks = row.find_element_by_xpath("./td[6]").text
+                chart = row.find_element_by_xpath("./td[7]").text
+                artist = row.find_element_by_xpath("./td[8]").text
+                aside = row.find_element_by_xpath("./td[9]").text
+                bside = row.find_element_by_xpath("./td[10]").text
+                label = row.find_element_by_xpath("./td[11]").text
                 
-                onedata = [symbol, eps, pe, fwd, ebitda, roe, revenue, grossmargin, netmargin, debttoequity]
-            except:
-                self.errorsymbols.append(symbol)
-                continue
-
-            print(onedata)
-            print('----------------------')
-
-            result.append(onedata)
+                onedata = [debutdate, peakdate, peakpos, wks, weeks, chart, artist, aside, bside, label]
+                print(onedata)
+                result.append(onedata)
             
         self.writeDatatoExcel(result)
 
