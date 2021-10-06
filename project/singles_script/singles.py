@@ -133,17 +133,20 @@ class SinglesApp():
                     continue
                 debutdate = row.find_element_by_xpath("./td[2]").text
                 peakdate = row.find_element_by_xpath("./td[3]").text
-                peakpos = row.find_element_by_xpath("./td[4]").text
-                wks = row.find_element_by_xpath("./td[5]").text
-                weeks = row.find_element_by_xpath("./td[6]").text
+                peakpos = int(row.find_element_by_xpath("./td[4]").text)
+                wks = int(row.find_element_by_xpath("./td[5]").text)
+                weeks = int(row.find_element_by_xpath("./td[6]").text)
                 chart = row.find_element_by_xpath("./td[7]").text
                 artist = row.find_element_by_xpath("./td[8]").text
                 aside = row.find_element_by_xpath("./td[9]").text
                 bside = row.find_element_by_xpath("./td[10]").text
                 label = row.find_element_by_xpath("./td[11]").text
                 try:
-                    riaa = WebDriverWait(row,0.01).until(EC.presence_of_element_located((By.XPATH, "./td[14]/div/img"))).get_attribute('src')
-                    riaa = '●'
+                    riaasrc = WebDriverWait(row,0).until(EC.presence_of_element_located((By.XPATH, "./td[14]/div/img"))).get_attribute('src')
+                    if 'symbol_G.png' in riaasrc:
+                        riaa = '●'
+                    else:
+                        riaa = '▲'
                 except Exception as e:
                     riaa = ''
                 
