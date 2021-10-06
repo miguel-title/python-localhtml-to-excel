@@ -102,7 +102,7 @@ class SinglesApp():
         lstInputPaths = self.getInputHtmlsPath()
 
         result = []
-        header_data = ['Debut Date', 'Peak Date', 'Peak Pos', 'Wks at Peak', 'Weeks Charted', 'Chart Title', 'Artist', 'A-Side', 'B-Side', 'Label & Number', 'Riaa']
+        header_data = ['Debut Date', 'Peak Date', 'Peak Pos', 'Wks at Peak', 'Weeks Charted', 'Chart Title', 'Artist', 'Album Title', 'Symbol', 'Label & Number', 'Multiplat', 'Riaa']
 
         result.append(header_data)
         index = 1
@@ -141,6 +141,7 @@ class SinglesApp():
                 aside = row.find_element_by_xpath("./td[9]").text
                 bside = row.find_element_by_xpath("./td[10]").text
                 label = row.find_element_by_xpath("./td[11]").text
+                multiplat = row.find_element_by_xpath("./td[11]").text
                 try:
                     riaasrc = WebDriverWait(row,0).until(EC.presence_of_element_located((By.XPATH, "./td[14]/div/img"))).get_attribute('src')
                     if 'symbol_G.png' in riaasrc:
@@ -150,7 +151,7 @@ class SinglesApp():
                 except Exception as e:
                     riaa = ''
                 
-                onedata = [debutdate, peakdate, peakpos, wks, weeks, chart, artist, aside, bside, label, riaa]
+                onedata = [debutdate, peakdate, peakpos, wks, weeks, chart, artist, aside, bside, label, multiplat, riaa]
                 print(onedata)
                 result.append(onedata)
             
@@ -177,7 +178,7 @@ class SinglesApp():
                     else:
                         worksheet.write(row_num, col_num, col_data, content_cell_format)
 
-        for index in range(11):
+        for index in range(12):
             self.set_column_autowidth(worksheet, index)
         
         workbook.close()
