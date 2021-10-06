@@ -43,7 +43,7 @@ class SinglesApp():
     def make_driver(self):
         options = Options()
         if os.name == "nt":
-            #options.add_argument('--headless')
+            options.add_argument('--headless')
             options.add_argument("--no-sandbox")
             driver = webdriver.Chrome(options=options)
         else:
@@ -143,9 +143,9 @@ class SinglesApp():
                 label = row.find_element_by_xpath("./td[11]").text
                 try:
                     riaa = WebDriverWait(row,0.01).until(EC.presence_of_element_located((By.XPATH, "./td[14]/div/img"))).get_attribute('src')
-                    riaa = '1'
+                    riaa = '●'
                 except Exception as e:
-                    riaa = '0'
+                    riaa = ''
                 
                 onedata = [debutdate, peakdate, peakpos, wks, weeks, chart, artist, aside, bside, label, riaa]
                 print(onedata)
