@@ -43,7 +43,7 @@ class SinglesApp():
     def make_driver(self):
         options = Options()
         if os.name == "nt":
-            options.add_argument('--headless')
+            #options.add_argument('--headless')
             options.add_argument("--no-sandbox")
             driver = webdriver.Chrome(options=options)
         else:
@@ -92,6 +92,8 @@ class SinglesApp():
         for (root, dirs, file) in os.walk(self.inputpath):
             for f in file:
                 if '.html' in f:
+                    if '\\admin.html' in os.path.abspath(os.path.join(root, f)) or '\\record_research.html' in os.path.abspath(os.path.join(root, f)) or '__MACOSX' in os.path.abspath(os.path.join(root, f)):
+                        continue
                     lstFiles.append(os.path.abspath(os.path.join(root, f)))
 
         return lstFiles
@@ -100,19 +102,11 @@ class SinglesApp():
         lstInputPaths = self.getInputHtmlsPath()
 
         result = []
-        header_data = ['Debut Date', 'Peak Date', 'Peak Pos', 'Wks at Peak', 'Weeks Charted', 'Chart Title', 'Artist', 'A-Side', 'B-Side', 'Label & Number']
+        header_data = ['Debut Date', 'Peak Date', 'Peak Pos', 'Wks at Peak', 'Weeks Charted', 'Chart Title', 'Artist', 'A-Side', 'B-Side', 'Label & Number', 'Riaa']
 
         result.append(header_data)
-        isfirst = True
         index = 1
         for path in lstInputPaths:
-            if isfirst == True:
-                isfirst = False
-                continue
-
-            if '\\admin.html' in path or '\\record_research.html' in path or '__MACOSX' in path:
-                continue
-
             #print(index)
             index += 1
 
@@ -131,6 +125,8 @@ class SinglesApp():
                 print("getting rows error:{}".format(e))
             
             isrowfirst = True
+            
+            driver.implicitly_wait(0.01)
             for row in rows:
                 if isrowfirst == True:
                     isrowfirst = False
@@ -145,8 +141,13 @@ class SinglesApp():
                 aside = row.find_element_by_xpath("./td[9]").text
                 bside = row.find_element_by_xpath("./td[10]").text
                 label = row.find_element_by_xpath("./td[11]").text
+                try:
+                    riaa = WebDriverWait(row,0.01).until(EC.presence_of_element_located((By.XPATH, "./td[14]/div/img"))).get_attribute('src')
+                    riaa = '1'
+                except Exception as e:
+                    riaa = '0'
                 
-                onedata = [debutdate, peakdate, peakpos, wks, weeks, chart, artist, aside, bside, label]
+                onedata = [debutdate, peakdate, peakpos, wks, weeks, chart, artist, aside, bside, label, riaa]
                 print(onedata)
                 result.append(onedata)
             
@@ -173,7 +174,7 @@ class SinglesApp():
                     else:
                         worksheet.write(row_num, col_num, col_data, content_cell_format)
 
-        for index in range(10):
+        for index in range(11):
             self.set_column_autowidth(worksheet, index)
         
         workbook.close()
