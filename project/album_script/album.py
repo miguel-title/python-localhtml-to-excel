@@ -141,7 +141,7 @@ class SinglesApp():
                 aside = row.find_element_by_xpath("./td[9]").text
                 bside = row.find_element_by_xpath("./td[10]").text
                 label = row.find_element_by_xpath("./td[11]").text
-                multiplat = row.find_element_by_xpath("./td[11]").text
+                multiplat = row.find_element_by_xpath("./td[12]").text
                 try:
                     riaasrc = WebDriverWait(row,0).until(EC.presence_of_element_located((By.XPATH, "./td[14]/div/img"))).get_attribute('src')
                     if 'symbol_G.png' in riaasrc:
